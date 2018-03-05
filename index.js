@@ -57,14 +57,16 @@ function convertAndSaveFile(inputPath) {
   let parsedPath = path.parse(inputPath);
   let targetPath = parsedPath.dir + '/' + parsedPath.name + '.' + targetType;
 
-  const ffmpeg = childProcess.spawnSync('ffmpeg', ['-i', `${inputPath}`, '-threads', '2', '-c:v', 'libx264', `${targetPath}`], {
-    cwd: process.cwd(),
-    env: process.env,
-    stdio: 'pipe',
-    encoding: 'utf-8'
-  });
-  console.info(ffmpeg.output);
-  fs.unlinkSync(inputPath);
+  return new Promise((resolve, reject) => {
+
+    const ffmpeg = childProcess.spawnSync('ffmpeg', ['-i', `${inputPath}`, '-threads', '2', '-c:v', 'libx264', `${targetPath}`], {
+      cwd: process.cwd(),
+      env: process.env,
+      stdio: 'pipe',
+      encoding: 'utf-8'
+    });
+    resolve(ffmpeg.output);
+  })
 }
 
 let files = allFilesSync(__dirname + '/../');
@@ -73,6 +75,13 @@ console.info("There are " + filteredFiles.length + " of type " + originalType);
 
 filteredFiles.forEach((file, fileIt) => {
     console.info('converting ' + (fileIt + 1) + ' of ' + filteredFiles.length);
-    convertAndSaveFile(file);
+
+  convertAndSaveFile(file)
+    .then((output) => {
+
+      console.log(output);
+      fs.unlinkSync(file);
+    });
+
   }
 );
