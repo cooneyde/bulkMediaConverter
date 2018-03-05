@@ -52,6 +52,7 @@ function filterFileType(fileList, fileType) {
   return updatedList;
 }
 
+
 function convertAndSaveFile(inputPath) {
 
   let parsedPath = path.parse(inputPath);
@@ -69,6 +70,36 @@ function convertAndSaveFile(inputPath) {
   })
 }
 
+
+function convertAndSaveFileAsync(inputPath) {
+
+  let parsedPath = path.parse(inputPath);
+  let targetPath = parsedPath.dir + '/' + parsedPath.name + '.' + targetType;
+
+  return new Promise((resolve, reject) => {
+
+    const ffmpeg = childProcess.spawn('ffmpeg', ['-i', `${inputPath}`, '-threads', '1', '-c:v', 'libx264', `${targetPath}`]);
+
+    ffmpeg.stdout.on('data', (data) => {
+      console.info(`stdout: ${data}`);
+    });
+
+    ffmpeg.stderr.on('data', (data) => {
+      console.error(`stderr: ${data}`);
+    });
+
+    ffmpeg.on('close', (code) => {
+      console.log(`child process exited with code ${code}`);
+      if (code == 0) {
+        resolve('Conversion of ' + inputPath + ' succeeded');
+      } else {
+        reject('Conversion of ' + inputPath + ' failed');
+      }
+    });
+  });
+}
+
+
 let files = allFilesSync(__dirname + '/../');
 let filteredFiles = filterFileType(files, originalType);
 console.info("There are " + filteredFiles.length + " of type " + originalType);
@@ -76,12 +107,15 @@ console.info("There are " + filteredFiles.length + " of type " + originalType);
 filteredFiles.forEach((file, fileIt) => {
     console.info('converting ' + (fileIt + 1) + ' of ' + filteredFiles.length);
 
-  convertAndSaveFile(file)
+  convertAndSaveFileAsync(file)
     .then((output) => {
 
       console.log(output);
       fs.unlinkSync(file);
-    });
+    })
+    .catch((err) => {
+      console.error(err);
+    })
 
   }
 );
