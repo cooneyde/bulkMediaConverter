@@ -1,0 +1,16 @@
+{
+  "name": "convertfiles",
+  "version": "1.0.0",
+  "description": "converts files from .avi to .mp4",
+  "main": "index.js",
+  "scripts": {
+    "start": "./node_modules/.bin/forever start index.js",
+    "stop": "./node_modules/.bin/forever stopall"
+  },
+  "author": "Dermot Cooney",
+  "license": "ISC",
+  "dependencies": {
+    "forever": "^0.15.3",
+    "winston": "^3.0.0-rc1"
+  }
+}
