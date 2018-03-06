@@ -82,7 +82,6 @@ function convertAndSaveFile(inputPath) {
 
   let parsedPath = path.parse(inputPath);
   let targetPath = parsedPath.dir + '/' + parsedPath.name + '.' + targetType;
-  logger.info(parsedPath.name);
   return new Promise((resolve, reject) => {
 
     const ffmpegSpawn = childProcess.spawnSync('ffmpeg', ['-i', `${inputPath}`, '-threads', '2', '-c:v', 'libx264', `${targetPath}`], {
@@ -100,6 +99,7 @@ function convertAndSaveFileFFMPEG(inputPath) {
 
   let parsedPath = path.parse(inputPath);
   let targetPath = parsedPath.dir + '/' + parsedPath.name + '.' + targetType;
+  logger.info(parsedPath.name);
 
   return new Promise((resolve, reject) => {
 
