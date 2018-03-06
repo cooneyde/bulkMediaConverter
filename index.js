@@ -105,7 +105,7 @@ function convertAndSaveFileFFMPEG(inputPath) {
 
     var process = new ffmpeg(inputPath)
       .videoCodec('libx264')
-      .addOption('-threads', '1')
+      .addOption('-threads', '2')
 
       .on('progress', function (info) {
         logger.info('progress ' + parsedPath.name + " " + info.percent + '%');
@@ -127,7 +127,7 @@ let files = allFilesSync(__dirname + '/../');
 let filteredFiles = filterFileType(files, originalType);
 logger.info("There are " + filteredFiles.length + " of type " + originalType);
 
-for (let i = 0; i < filteredFiles.length; i++) {
+for (let i = 0; i < 2; i++) {
   logger.info('converting ' + (i + 1) + ' of ' + filteredFiles.length);
 
   convertAndSaveFileFFMPEG(filteredFiles[i])
