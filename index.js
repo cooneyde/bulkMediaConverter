@@ -116,6 +116,7 @@ function convertAndSaveFileFFMPEG(inputPath) {
       })
 
       .on('error', function (err) {
+        logger.error(err);
         reject(err);
       })
       .save(targetPath);
