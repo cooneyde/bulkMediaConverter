@@ -49,8 +49,8 @@ function allFilesSync(dir) {
 
   fs.readdirSync(dir).forEach((file) => {
     const filePath = path.join(dir, file);
-
-    if (filePath.indexOf('.@__thumb') < 0) {
+    const parsedPath = path.parse(filePath);
+    if (filePath.indexOf('.@__thumb') < 0 && parsedPath.name.startsWith('._') == false) {
       if (fs.statSync(filePath).isDirectory()) {
 
         let childFiles = allFilesSync(filePath);
