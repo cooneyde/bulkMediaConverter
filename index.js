@@ -105,7 +105,7 @@ function convertAndSaveFileFFMPEG(inputPath) {
 
     var process = new ffmpeg(inputPath)
       .videoCodec('libx264')
-      .addOption('-threads', '2')
+      .addOption('-threads', '1')
 
       .on('progress', function (info) {
         logger.info('progress ' + parsedPath.name + " " + info.percent + '%');
