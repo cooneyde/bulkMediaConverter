@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const ffmpeg = require('fluent-ffmpeg');
 const childProcess = require('child_process');
 const winston = require('winston');
 
@@ -36,6 +37,7 @@ if (process.env.NODE_ENV !== 'production') {
     format: winston.format.simple()
   }));
 }
+
 
 /**
  * Retieves a list of absolute paths to every file in the parent directory and all sub directories
@@ -83,42 +85,40 @@ function convertAndSaveFile(inputPath) {
 
   return new Promise((resolve, reject) => {
 
-    const ffmpeg = childProcess.spawnSync('ffmpeg', ['-i', `${inputPath}`, '-threads', '2', '-c:v', 'libx264', `${targetPath}`], {
+    const ffmpegSpawn = childProcess.spawnSync('ffmpeg', ['-i', `${inputPath}`, '-threads', '2', '-c:v', 'libx264', `${targetPath}`], {
       cwd: process.cwd(),
       env: process.env,
       stdio: 'pipe',
       encoding: 'utf-8'
     });
-    resolve(ffmpeg.output);
+    resolve(ffmpegSpawn.output);
   })
 }
 
 
-function convertAndSaveFileAsync(inputPath) {
+function convertAndSaveFileFFMPEG(inputPath) {
 
   let parsedPath = path.parse(inputPath);
   let targetPath = parsedPath.dir + '/' + parsedPath.name + '.' + targetType;
 
   return new Promise((resolve, reject) => {
 
-    const ffmpeg = childProcess.spawn('ffmpeg', ['-i', `${inputPath}`, '-threads', '1', '-c:v', 'libx264', `${targetPath}`]);
+    var process = new ffmpeg(inputPath)
+      .videoCodec('libx264')
+      .addOption('-threads', '2')
 
-    ffmpeg.stdout.on('data', (data) => {
-      logger.info(`${data}`);
-    });
+      .on('progress', function (info) {
+        logger.info('progress ' + parsedPath.name + " " + info.percent.toFixed(2) + '%');
+      })
 
-    ffmpeg.stderr.on('data', (data) => {
-      logger.debug(`${data}`);
-    });
+      .on('end', function () {
+        resolve(parsedPath.name + ' has been converted succesfully')
+      })
 
-    ffmpeg.on('close', (code) => {
-      console.log(`child process exited with code ${code}`);
-      if (code == 0) {
-        resolve('Conversion of ' + inputPath + ' succeeded');
-      } else {
-        reject('Conversion of ' + inputPath + ' failed');
-      }
-    });
+      .on('error', function (err) {
+        reject(err);
+      })
+      .save(targetPath);
   });
 }
 
@@ -127,18 +127,16 @@ let files = allFilesSync(__dirname + '/../');
 let filteredFiles = filterFileType(files, originalType);
 logger.info("There are " + filteredFiles.length + " of type " + originalType);
 
-filteredFiles.forEach((file, fileIt) => {
-  logger.info('converting ' + (fileIt + 1) + ' of ' + filteredFiles.length);
+for (let i = 0; i < filteredFiles.length; i++) {
+  logger.info('converting ' + (i + 1) + ' of ' + filteredFiles.length);
 
-  convertAndSaveFileAsync(file)
+  convertAndSaveFileFFMPEG(filteredFiles[i])
     .then((output) => {
 
       logger.info(output);
-      fs.unlinkSync(file);
+      fs.unlinkSync(filteredFiles[i]);
     })
     .catch((err) => {
       logger.error(err);
-    })
-
-  }
-);
+    });
+}
