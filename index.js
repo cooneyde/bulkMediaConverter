@@ -108,7 +108,7 @@ function convertAndSaveFileFFMPEG(inputPath) {
       .addOption('-threads', '2')
 
       .on('progress', function (info) {
-        logger.info('progress ' + parsedPath.name + " " + info.percent.toFixed(2) + '%');
+        logger.info('progress ' + parsedPath.name + " " + info.percent + '%');
       })
 
       .on('end', function () {
