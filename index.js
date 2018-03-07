@@ -96,7 +96,7 @@ function convertAndSaveFileFFMPEG(inputPath) {
   return new Promise((resolve, reject) => {
 
     let process = new ffmpeg(inputPath)
-      .videoCodec('libx264')
+      .videoCodec('h264')
       .addOption('-threads', '1')
 
       .on('progress', function (info) {
