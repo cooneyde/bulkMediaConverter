@@ -49,7 +49,7 @@ function allFilesSync(dir) {
     const filePath = path.join(dir, file);
     const parsedPath = path.parse(filePath);
 
-    if (filePath.indexOf('.@__thumb') < 0 && parsedPath.name.startsWith('._') == false) {
+    if (parsedPath.name.startsWith('.') == false) {   //check for hidden files
       if (fs.statSync(filePath).isDirectory()) {
 
         let childFiles = allFilesSync(filePath);
