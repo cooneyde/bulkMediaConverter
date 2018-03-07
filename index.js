@@ -1,10 +1,8 @@
 'use strict';
 
-
 const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
-const childProcess = require('child_process');
 const winston = require('winston');
 
 const logDir = path.join(__dirname, 'logs');
@@ -41,8 +39,8 @@ if (process.env.NODE_ENV !== 'production') {
 
 /**
  * Retieves a list of absolute paths to every file in the parent directory and all sub directories
- * @param dir
- * @returns {Array}
+ * @param dir         Parent directory of the running application (where media is stored)
+ * @returns {Array}   A list of all files that are not hidden
  */
 function allFilesSync(dir) {
   let fileListRet = [];
@@ -50,6 +48,7 @@ function allFilesSync(dir) {
   fs.readdirSync(dir).forEach((file) => {
     const filePath = path.join(dir, file);
     const parsedPath = path.parse(filePath);
+
     if (filePath.indexOf('.@__thumb') < 0 && parsedPath.name.startsWith('._') == false) {
       if (fs.statSync(filePath).isDirectory()) {
 
@@ -64,6 +63,12 @@ function allFilesSync(dir) {
 }
 
 
+/**
+ * Filters the given list of files found to return only the file types we wish to convert
+ * @param fileList  Array of strings containing absolute path to each file
+ * @param fileType  Contains the file types we want to convert
+ * @returns {Array} Returns a filtered array with all files of the desired type for conversion
+ */
 function filterFileType(fileList, fileType) {
 
   let updatedList = [];
@@ -78,32 +83,19 @@ function filterFileType(fileList, fileType) {
 }
 
 
-function convertAndSaveFile(inputPath) {
-
-  let parsedPath = path.parse(inputPath);
-  let targetPath = parsedPath.dir + '/' + parsedPath.name + '.' + targetType;
-  return new Promise((resolve, reject) => {
-
-    const ffmpegSpawn = childProcess.spawnSync('ffmpeg', ['-i', `${inputPath}`, '-threads', '2', '-c:v', 'libx264', `${targetPath}`], {
-      cwd: process.cwd(),
-      env: process.env,
-      stdio: 'pipe',
-      encoding: 'utf-8'
-    });
-    resolve(ffmpegSpawn.output);
-  })
-}
-
-
+/**
+ * Spawns an instance off ffmpeg for media conversion and monitors responses
+ * @param inputPath         Path of the file to be converted
+ * @returns {Promise<any>}  Returns either a successful or failed promise containing an error or success message
+ */
 function convertAndSaveFileFFMPEG(inputPath) {
 
   let parsedPath = path.parse(inputPath);
   let targetPath = parsedPath.dir + '/' + parsedPath.name + '.' + targetType;
-  logger.info(parsedPath.name);
 
   return new Promise((resolve, reject) => {
 
-    var process = new ffmpeg(inputPath)
+    let process = new ffmpeg(inputPath)
       .videoCodec('libx264')
       .addOption('-threads', '1')
 
@@ -116,8 +108,7 @@ function convertAndSaveFileFFMPEG(inputPath) {
       })
 
       .on('error', function (err) {
-        logger.error(err + " on this file " + inputPath);
-        reject(err);
+        reject(err + " on this file " + inputPath);
       })
       .save(targetPath);
   });
