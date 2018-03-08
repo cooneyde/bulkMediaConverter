@@ -8,7 +8,7 @@ const winston = require('winston');
 const logDir = path.join(__dirname, 'logs');
 const originalType = 'avi';
 const targetType = 'mp4';
-
+let ffmpegConcurrentInstances = 2;
 // Create the log directory if it does not exist
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir);
@@ -16,14 +16,20 @@ if (!fs.existsSync(logDir)) {
 
 const logger = winston.createLogger({
   level: 'info',
-  format: winston.format.json(),
+  timestamp: true,
   transports: [
 
     new winston.transports.File({filename: 'error.log', level: 'error'}),
     new winston.transports.File({filename: 'debug.log', level: 'debug'}),
     new winston.transports.File({filename: 'info.log', level: 'info'}),
+    new winston.transports.File({filename: 'verbose.log', level: 'verbose'}),
     new winston.transports.File({filename: 'combined.log'})
-  ]
+  ],
+  format: winston.format.combine(
+    winston.format.colorize({all: true}),
+    winston.format.timestamp(),
+    winston.format.json()
+  )
 });
 
 //
@@ -103,12 +109,17 @@ function convertAndSaveFileFFMPEG(inputPath) {
         logger.debug('progress ' + parsedPath.name + " " + info.percent + '%');
       })
 
-      .on('end', function () {
+      .on('end', function (data) {
+        logger.info(data);
         resolve(parsedPath.name + ' has been converted succesfully')
       })
 
       .on('error', function (err) {
         reject(err + " on this file " + inputPath);
+      })
+
+      .on('stderr', function (data) {
+        logger.verbose(data);
       })
       .save(targetPath);
   });
@@ -119,7 +130,8 @@ let files = allFilesSync(__dirname + '/../');
 let filteredFiles = filterFileType(files, originalType);
 logger.info("There are " + filteredFiles.length + " of type " + originalType);
 
-for (let i = 0; i < 2; i++) {
+ffmpegConcurrentInstances = (ffmpegConcurrentInstances > filteredFiles.length) ? filteredFiles.length : ffmpegConcurrentInstances;
+for (let i = 0; i < ffmpegConcurrentInstances; i++) {
   logger.info('converting ' + (i + 1) + ' of ' + filteredFiles.length);
 
   convertAndSaveFileFFMPEG(filteredFiles[i])
