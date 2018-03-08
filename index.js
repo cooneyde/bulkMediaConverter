@@ -106,7 +106,7 @@ function convertAndSaveFileFFMPEG(inputPath) {
       .addOption('-threads', '1')
 
       .on('progress', function (info) {
-        logger.debug('progress ' + parsedPath.name + " " + info.percent + '%');
+        logger.verbose('progress ' + parsedPath.name + " " + info.percent + '%');
       })
 
       .on('end', function (data) {
@@ -119,7 +119,7 @@ function convertAndSaveFileFFMPEG(inputPath) {
       })
 
       .on('stderr', function (data) {
-        logger.verbose(data);
+        logger.debug(data);
       })
       .save(targetPath);
   });
