@@ -6,8 +6,8 @@ const ffmpeg = require('fluent-ffmpeg');
 const winston = require('winston');
 
 const logDir = path.join(__dirname, 'logs');
-const originalType = 'avi';
-const targetType = 'mp4';
+const originalType = 'mp4';
+const targetType = 'mkv';
 let ffmpegConcurrentInstances = 2;
 // Create the log directory if it does not exist
 if (!fs.existsSync(logDir)) {
